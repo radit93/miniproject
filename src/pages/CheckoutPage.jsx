@@ -17,7 +17,9 @@ export default function CheckoutPage() {
   const [alamat, setAlamat] = useState("");
   const [nohp, setNohp] = useState("");
 
-  // ========== FETCH PROFILE USER ==========
+  // ==========================================
+  // FETCH PROFILE USER
+  // ==========================================
   useEffect(() => {
     if (!user) return;
 
@@ -40,7 +42,9 @@ export default function CheckoutPage() {
     fetchProfile();
   }, [user]);
 
-  // ========== FETCH CART USER ==========
+  // ==========================================
+  // FETCH CART USER + GAMBAR PRODUK
+  // ==========================================
   useEffect(() => {
     if (!user) return;
 
@@ -64,129 +68,159 @@ export default function CheckoutPage() {
         `)
         .eq("user_id", user.id);
 
-      if (!error) setCartItems(data || []);
+      if (!error) {
+        setCartItems(data || []);
+      }
+
       setCartLoading(false);
     };
 
     fetchCart();
   }, [user]);
 
-  // HITUNG TOTAL
+  // TOTAL
   const totalHarga = cartItems.reduce(
     (s, item) => s + Number(item.variant.price) * item.quantity,
     0
   );
 
-  // ========== HANDLE ORDER ==========
+  // ==========================================
+  // KONFIRMASI ORDER
+  // ==========================================
   const handlePlaceOrder = async () => {
-    if (!nama || !alamat || !nohp) {
-      alert("Semua data pemesan harus diisi.");
+  if (!nama || !alamat || !nohp) {
+    alert("Semua data pemesan harus diisi.");
+    return;
+  }
+
+  if (cartItems.length === 0) {
+    alert("Keranjang kosong.");
+    return;
+  }
+
+  // Validasi stok (opsional, tetap boleh cek)
+  for (const item of cartItems) {
+    if (item.quantity > item.variant.stock) {
+      alert(
+        `Stok tidak cukup untuk ${item.product.name} (Size ${item.variant.size}).`
+      );
       return;
     }
+  }
 
-    if (cartItems.length === 0) {
-      alert("Keranjang kosong.");
-      return;
-    }
+  // Update profile
+  await supabase
+    .from("profiles")
+    .update({
+      usernames: nama,
+      alamat: alamat,
+      no_hp: nohp,
+    })
+    .eq("id", user.id);
 
-    for (const item of cartItems) {
-      if (item.quantity > item.variant.stock) {
-        alert(
-          `Stok tidak cukup untuk ${item.product.name} (Size ${item.variant.size}).`
-        );
-        return;
-      }
-    }
-
-    // UPDATE PROFILE
-    await supabase
-      .from("profiles")
-      .update({
-        usernames: nama,
+  // 1) Insert order dengan status Waiting For Payment
+  const { data: newOrder, error: orderError } = await supabase
+    .from("orders")
+    .insert([
+      {
+        user_id: user.id,
+        nama_pemesan: nama,
         alamat: alamat,
         no_hp: nohp,
-      })
-      .eq("id", user.id);
+        total_harga: totalHarga,
+        status: "Waiting For Payment", // status awal
+      },
+    ])
+    .select()
+    .single();
 
-    // INSERT ORDER
-    const { data: newOrder, error: orderError } = await supabase
-      .from("orders")
-      .insert([
+  if (orderError || !newOrder) {
+    console.error(orderError);
+    alert("Gagal membuat order.");
+    return;
+  }
+
+  // 2) Insert order_items
+  for (const item of cartItems) {
+    await supabase.from("order_items").insert([
+      {
+        order_id: newOrder.id,
+        product_id: item.product.id,
+        variant_id: item.variant.id,
+        qty: item.quantity,
+        harga: item.variant.price,
+      },
+    ]);
+  }
+
+  // 3) Hapus cart (biar ga dobel-dobel)
+  await supabase.from("cart").delete().eq("user_id", user.id);
+
+  // 4) Panggil Edge Function create-payment
+  try {
+    const res = await fetch(
+          'https://tjvsczecnivadfojqscw.supabase.co/functions/v1/create-payment',     
         {
-          user_id: user.id,
-          nama_pemesan: nama,
-          alamat: alamat,
-          no_hp: nohp,
-          total_harga: totalHarga,
-          status: "Waiting For Payment",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ])
-      .select()
-      .single();
+        body: JSON.stringify({
+          order_id: String(newOrder.id), // penting: nanti dipakai di webhook
+          gross_amount: totalHarga,
+          items: cartItems.map((item) => ({
+            id: String(item.product.id),
+            price: Number(item.variant.price),
+            quantity: item.quantity,
+            name: item.product.name,
+          })),
+          customer: {
+            name: nama,
+            phone: nohp,
+            address: alamat,
+          },
+        }),
+      }
+    );
 
-    if (orderError || !newOrder) {
-      alert("Gagal membuat order.");
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Midtrans error:", data);
+      alert("Gagal membuat transaksi pembayaran.");
       return;
     }
 
-    // INSERT ORDER ITEMS
-    for (const item of cartItems) {
-      await supabase.from("order_items").insert([
-        {
-          order_id: newOrder.id,
-          product_id: item.product.id,
-          variant_id: item.variant.id,
-          qty: item.quantity,
-          harga: item.variant.price,
-        },
-      ]);
-    }
+    // SIMPAN SNAP TOKEN
+    const token = data.token;
 
-    // CLEAR CART
-    await supabase.from("cart").delete().eq("user_id", user.id);
+    await supabase
+      .from("orders")
+      .update({ snap_token: token })
+      .eq("id", newOrder.id);
 
-    // EDGE FUNCTION MIDTRANS
-    try {
-      const res = await fetch(
-        "https://tjvsczecnivadfojqscw.supabase.co/functions/v1/create-payment",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            order_id: String(newOrder.id),
-            gross_amount: totalHarga,
-            items: cartItems.map((item) => ({
-              id: String(item.product.id),
-              price: Number(item.variant.price),
-              quantity: item.quantity,
-              name: item.product.name,
-            })),
-            customer: {
-              name: nama,
-              phone: nohp,
-              address: alamat,
-            },
-          }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        alert("Gagal membuat transaksi pembayaran.");
-        return;
-      }
-
-      window.snap.pay(data.token, {
-        onSuccess: () => navigate("/order-success"),
-        onPending: () => navigate("/order-success"),
-        onError: () => alert("Terjadi kesalahan saat pembayaran."),
-        onClose: () => navigate("/orders"),
-      });
-    } catch (e) {
-      alert("Error memproses pembayaran.");
-    }
-  };
+    // 5) Buka Snap
+    window.snap.pay(data.token, {
+      onSuccess: function () {
+        navigate("/order-success");
+      },
+      onPending: function () {
+        navigate("/order-success");
+      },
+      onError: function () {
+        alert("Terjadi kesalahan saat pembayaran.");
+      },
+      onClose: function () {
+        // user nutup pop up tanpa bayar
+        // biarin, status tetap 'Waiting for payment'
+        navigate("/orders");
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    alert("Error memproses pembayaran.");
+  }
+};
 
   if (cartLoading || profileLoading) {
     return <div className="p-6 text-center">Memuat checkout...</div>;
@@ -207,7 +241,12 @@ export default function CheckoutPage() {
         <h1 className="text-3xl font-bold tracking-wide">Checkout</h1>
       </div>
 
-      {/* WRAPPER BESAR */}
+      {/* TITLE */}
+      <h1 className="text-3xl font-bold mt-4 mb-6 tracking-wide">
+        Checkout
+      </h1>
+
+      {/* WRAPPER BESAR FULL WIDTH (DATA PEMESAN + RINGKASAN PESANAN) */}
       <div className="w-full bg-white px-4 py-4 rounded-xl shadow mb-6">
 
         {/* DATA PEMESAN */}
@@ -249,6 +288,7 @@ export default function CheckoutPage() {
               key={item.id}
               className="mb-3 border-b pb-3 flex gap-4 items-center"
             >
+              {/* GAMBAR PRODUK */}
               <div className="w-20 h-20 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
                 {imageUrl ? (
                   <img
@@ -261,10 +301,14 @@ export default function CheckoutPage() {
                 )}
               </div>
 
+              {/* INFO PRODUK */}
               <div>
                 <p className="font-semibold">{item.product.name}</p>
                 <p>Size: {item.variant.size}</p>
-                <p>Harga per item: Rp {Number(item.variant.price).toLocaleString("id-ID")}</p>
+                <p>
+                  Harga per item: Rp{" "}
+                  {Number(item.variant.price).toLocaleString("id-ID")}
+                </p>
                 <p>Jumlah: {item.quantity}</p>
               </div>
             </div>
