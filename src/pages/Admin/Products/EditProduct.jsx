@@ -10,9 +10,6 @@ export default function EditProduct() {
 
   const [loading, setLoading] = useState(true);
 
-  // ------------------------------------------------
-  // STATE FORM PRODUK UTAMA
-  // ------------------------------------------------
   const [form, setForm] = useState({
     nama: "",
     brand_id: "",
@@ -22,17 +19,12 @@ export default function EditProduct() {
     gambar2: null,
   });
 
-  // Display image lama
   const [oldImg1, setOldImg1] = useState(null);
   const [oldImg2, setOldImg2] = useState(null);
 
-  // DROPDOWN OPTIONS
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // ------------------------------------------------
-  // FETCH DROPDOWN + DATA PRODUK
-  // ------------------------------------------------
   useEffect(() => {
     loadBrands();
     loadCategories();
@@ -67,9 +59,6 @@ export default function EditProduct() {
     setLoading(false);
   };
 
-  // ------------------------------------------------
-  // HANDLE CHANGE
-  // ------------------------------------------------
   const handleChange = (name, value) => {
     setForm((p) => ({ ...p, [name]: value }));
   };
@@ -86,9 +75,6 @@ export default function EditProduct() {
     });
   };
 
-  // ------------------------------------------------
-  // UPLOAD STORAGE
-  // ------------------------------------------------
   const uploadImage = async (file) => {
     if (!file) return null;
 
@@ -97,7 +83,7 @@ export default function EditProduct() {
 
     const { error } = await supabase.storage
       .from("product_image")
-      .upload(filePath, file, { upsert: false });
+      .upload(filePath, file);
 
     if (error) throw error;
 
@@ -108,9 +94,6 @@ export default function EditProduct() {
     return data.publicUrl;
   };
 
-  // ------------------------------------------------
-  // SUBMIT: UPDATE PRODUCT UTAMA
-  // ------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -139,23 +122,26 @@ export default function EditProduct() {
   if (loading) return <p className="p-6">Loading...</p>;
 
   return (
-    <div className="p-6">
+    <div className="p-10 w-full">
 
-      <div className="mb-6 flex items-center gap-3">
+      {/* HEADER */}
+      <div className="mb-8 flex items-center gap-3">
         <button
           className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
-          onClick={() => navigate(-1)}>
+          onClick={() => navigate(-1)}
+        >
           <ArrowLeft size={20} className="text-black" />
         </button>
-        <h1 className="text-2xl font-bold">Edit Produk</h1>
+
+        <h1 className="text-3xl font-bold">Edit Produk</h1>
       </div>
 
-
+      {/* CARD FULL WIDTH */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-xl p-8 max-w-3xl space-y-6"
+        className="bg-white border border-gray-200 shadow p-10 rounded-xl w-full"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-8">
 
           {/* NAMA */}
           <FormInput
@@ -163,45 +149,31 @@ export default function EditProduct() {
             name="nama"
             form={form}
             handle={handleChange}
-            className="bg-white"
           />
 
           {/* BRAND */}
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Brand
-            </label>
-            <select
-              value={form.brand_id}
-              onChange={(e) => handleChange("brand_id", e.target.value)}
-              className="w-full bg-[#ffffff] border border-gray-300 rounded-xl px-4 py-3"
-            >
-              <option value="">Pilih Brand</option>
-              {brands.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
+          <SelectBlock
+            label="Brand"
+            value={form.brand_id}
+            onChange={(e) => handleChange("brand_id", e.target.value)}
+            options={brands}
+          />
 
           {/* DESKRIPSI */}
-          <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Deskripsi
-            </label>
+          <div className="flex flex-col">
+            <label className="text-gray-600 text-sm mb-1">Deskripsi</label>
             <textarea
-              rows={5}
+              rows={6}
               value={form.deskripsi}
               onChange={(e) => handleChange("deskripsi", e.target.value)}
-              className="w-full bg-[#fffff] border border-gray-300 rounded-xl px-4 py-3"
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-4 text-gray-900"
             ></textarea>
           </div>
 
-          {/* CATEGORY */}
-          <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Kategori
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+          {/* KATEGORI */}
+          <div>
+            <label className="text-gray-600 text-sm mb-2 block">Kategori</label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {categories.map((c) => (
                 <label key={c.id} className="flex items-center gap-2">
                   <input
@@ -216,42 +188,52 @@ export default function EditProduct() {
           </div>
 
           {/* GAMBAR 1 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
+          <div className="flex flex-col">
+            <label className="text-gray-600 text-sm mb-1">
               Gambar 1 (kosongkan jika tidak diganti)
             </label>
+
             {oldImg1 && (
-              <img src={oldImg1} className="w-20 h-20 object-cover rounded mb-2" />
+              <img
+                src={oldImg1}
+                className="w-24 h-24 object-cover rounded mb-3"
+              />
             )}
+
             <input
               type="file"
               accept="image/*"
               onChange={(e) => handleChange("gambar1", e.target.files[0])}
-              className="w-full bg-[#fffff] border border-gray-300 rounded-xl px-4 py-3"
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
             />
           </div>
 
           {/* GAMBAR 2 */}
-          <div>
-            <label className="block text-sm font-medium text-gray-600 mb-1">
+          <div className="flex flex-col">
+            <label className="text-gray-600 text-sm mb-1">
               Gambar 2 (kosongkan jika tidak diganti)
             </label>
+
             {oldImg2 && (
-              <img src={oldImg2} className="w-20 h-20 object-cover rounded mb-2" />
+              <img
+                src={oldImg2}
+                className="w-24 h-24 object-cover rounded mb-3"
+              />
             )}
+
             <input
               type="file"
               accept="image/*"
               onChange={(e) => handleChange("gambar2", e.target.files[0])}
-              className="w-full bg-[#fffff] border border-gray-300 rounded-xl px-4 py-3"
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
             />
           </div>
-
         </div>
 
+        {/* BUTTON */}
         <button
           type="submit"
-          className="bg-black text-white w-full py-3 rounded-xl font-semibold hover:bg-black/80 transition"
+          className="mt-10 bg-black text-white w-full py-3 rounded-xl font-semibold hover:bg-black/80 transition"
         >
           Simpan Perubahan
         </button>
@@ -260,18 +242,42 @@ export default function EditProduct() {
   );
 }
 
+/* ---------------------------------------------
+   UNIVERSAL INPUT (tema profile admin)
+--------------------------------------------- */
 function FormInput({ label, name, type = "text", form, handle }) {
   return (
-    <div>
-      <label className="block mb-1 text-sm font-medium">
-        {label}
-      </label>
+    <div className="flex flex-col">
+      <label className="text-gray-600 text-sm mb-1">{label}</label>
       <input
         type={type}
         value={form[name]}
         onChange={(e) => handle(name, e.target.value)}
-        className="w-full bg-[#fffff] border0 rounded-xl px-4 py-3"
+        className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3 text-gray-900"
       />
+    </div>
+  );
+}
+
+/* ---------------------------------------------
+   UNIVERSAL SELECT (tema profile admin)
+--------------------------------------------- */
+function SelectBlock({ label, value, onChange, options }) {
+  return (
+    <div className="flex flex-col">
+      <label className="text-gray-600 text-sm mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={onChange}
+        className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3 text-gray-900"
+      >
+        <option value="">Pilih {label}</option>
+        {options.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

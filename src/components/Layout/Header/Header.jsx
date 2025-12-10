@@ -1,6 +1,6 @@
-// src/components/Header/Header.jsx
+// src/components/Layout/Header/Header.jsx
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/authContext";
 
 import HeaderNav from "./HeaderNav";
@@ -9,74 +9,96 @@ import HeaderIcons from "./HeaderIcons";
 import { useSearch } from "../../../context/SearchContext";
 import { RightSidebar } from "../../SideBar/RightSidebar";
 
-// IMPORT CART & WISHLIST
 import Cart from "../../../pages/Cart";
 import Wishlist from "../../../pages/Wishlist";
 
-export default function Header() {
+export default function Header({ isOnHero }) {
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  // STATE UNTUK SIDEBAR
-  const [sidebar, setSidebar] = useState(null);
-
   const { setSearchQuery } = useSearch();
+
+  const [sidebar, setSidebar] = useState(null);
   const [query, setQuery] = useState("");
+
+  const [hidden, setHidden] = useState(false);
+  const [lastScroll, setLastScroll] = useState(0);
 
   const handleTyping = (value) => {
     setQuery(value);
-
-    if (value.trim() === "") {
-      setSearchQuery("");
-      return;
-    }
-
+    if (value.trim() === "") return setSearchQuery("");
     setSearchQuery(value);
   };
 
   const handleSearch = (e) => {
-    if (e.key === "Enter") {
-      setSearchQuery(query);
-    }
+    if (e.key === "Enter") setSearchQuery(query);
   };
+
+  // SCROLL DOWN → HIDE, SCROLL UP → SHOW
+  useEffect(() => {
+    const onScroll = () => {
+      const current = window.scrollY;
+
+      if (current > lastScroll && current > 80) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+
+      setLastScroll(current);
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [lastScroll]);
 
   return (
     <>
-<header className="w-full fixed top-0 z-50 bg-transparent backdrop-blur-[2px]">
-        <div className="flex items-center justify-between px-8 py-4">
+      <header
+        className={`
+          fixed top-0 left-0 w-full z-50
+          transition-all duration-300
 
+          ${hidden ? "-translate-y-full" : "translate-y-0"}
+
+          bg-transparent
+          ${isOnHero ? "text-white" : "text-black"}
+        `}
+      >
+        <div className="flex items-center justify-between px-8 py-4">
           <div
             className="font-bold text-xl cursor-pointer relative -top-1"
             onClick={() => {
               navigate("/");
               setQuery("");
-              setSearchQuery(""); 
+              setSearchQuery("");
             }}
           >
             Kavva
           </div>
 
-          <HeaderNav />
+          <HeaderNav isOnHero={isOnHero} />
 
           <div className="flex items-center gap-4">
             <HeaderSearch
               query={query}
               setQuery={handleTyping}
               handleSearch={handleSearch}
+              isOnHero={isOnHero}
             />
 
-            {/* KIRIM setSidebar KE ICONS */}
-            <HeaderIcons user={user} setSidebar={setSidebar} />
+            <HeaderIcons
+              user={user}
+              setSidebar={setSidebar}
+              isOnHero={isOnHero}
+            />
           </div>
-
         </div>
       </header>
 
-      {/* === SIDEBAR RENDER === */}
       <RightSidebar open={sidebar !== null} onClose={() => setSidebar(null)}>
-  {sidebar === "cart" && <Cart />}
-  {sidebar === "wishlist" && <Wishlist />}
-</RightSidebar>
+        {sidebar === "cart" && <Cart />}
+        {sidebar === "wishlist" && <Wishlist />}
+      </RightSidebar>
     </>
   );
 }

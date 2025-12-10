@@ -94,32 +94,6 @@ export default function Dashboard() {
         {/* AVATAR + USER INFO WITH HOVER ARROW */}
         <div className="flex items-center gap-4 mb-10 relative group">
 
-          {/* PANAH MUNCUL SAAT HOVER */}
-          <button
-            onClick={() => navigate(-1)}
-            className="
-              absolute 
-              left-[-22px]
-              top-1/2 
-              -translate-y-1/2 
-              bg-white 
-              rounded-full 
-              shadow-sm 
-              p-1.5 
-              opacity-0 
-              group-hover:opacity-100 
-              group-hover:-translate-x-1
-              transition-all 
-              duration-300
-              hover:scale-110
-            "
-          >
-            <ArrowLeft size={14} className="text-black" />
-          </button>
-
-
-
-
           {/* AVATAR */}
           <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
             <span className="text-black font-semibold text-xl">
@@ -190,15 +164,26 @@ export default function Dashboard() {
             {activeMenu === "dashboard" ? "Dashboard" : "Profil"}
           </h1>
 
-          {activeMenu === "profile" && (
+          <div className="flex items-center gap-3">
+
+            {/* ARROW LEFT PINDAH KE SINI */}
             <button
-              onClick={() => setEditMode(!editMode)}
-              className="p-2 border border-black rounded-lg hover:bg-black hover:text-white transition"
-            >
-              <Pencil size={18} />
+              onClick={() => navigate(-1)}
+              className="p-2 border border-black rounded-lg hover:bg-black hover:text-white transition">
+              <ArrowLeft size={18} />
             </button>
-          )}
+
+            {activeMenu === "profile" && (
+              <button
+                onClick={() => setEditMode(!editMode)}
+                className="p-2 border border-black rounded-lg hover:bg-black hover:text-white transition"
+              >
+                <Pencil size={18} />
+              </button>
+            )}
+          </div>
         </header>
+
 
         {/* DASHBOARD */}
         {activeMenu === "dashboard" && (

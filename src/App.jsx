@@ -63,7 +63,7 @@ export default function App() {
 
   return (
     <>
-      {!hideLayout && <Header />}
+  {!hideLayout && location.pathname !== "/" && <Header />}
 
       <Routes>
         {/* PUBLIC */}

@@ -29,8 +29,16 @@ const Footer = () => {
               <a href="/about" className="text-white hover:text-white">About</a>
             </li>
             <li>
-              <a href="/contact" className="text-white hover:text-white">Contact</a>
-            </li>
+  <a 
+    href="https://wa.me/6285855974524"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-white hover:text-white"
+  >
+    Contact
+  </a>
+</li>
+
           </ul>
         </div>
 
@@ -48,8 +56,16 @@ const Footer = () => {
               <a href="/about" className="text-white hover:text-white">About</a>
             </li>
             <li>
-              <a href="/contact" className="text-white hover:text-white">Contact</a>
+              <a 
+                href="https://wa.me/6285855974524"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-white"
+              >
+                Contact
+              </a>
             </li>
+
           </ul>
         </div>
 

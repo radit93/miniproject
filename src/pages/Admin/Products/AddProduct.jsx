@@ -8,10 +8,7 @@ import { ArrowLeft } from "lucide-react";
 export default function AddProduct() {
   const navigate = useNavigate();
 
-  // -----------------------------------------
-  // STATE FORM
-  // -----------------------------------------
-    const [form, setForm] = useState({
+  const [form, setForm] = useState({
     nama: "",
     brand_id: "",
     category_ids: [],
@@ -24,17 +21,10 @@ export default function AddProduct() {
     gambar2: null,
   });
 
-
-  // -----------------------------------------
-  // DROPDOWN DATA
-  // -----------------------------------------
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
   const [grades, setGrades] = useState([]);
 
-  // -----------------------------------------
-  // FETCH BRAND DAN CATEGORY
-  // -----------------------------------------
   useEffect(() => {
     loadBrands();
     loadCategories();
@@ -42,89 +32,52 @@ export default function AddProduct() {
   }, []);
 
   const loadBrands = async () => {
-    const { data, error } = await supabase
-      .from("brands")        // 🔴 TABLE: brands
-      .select("id, name");
-
-    if (!error) setBrands(data);
+    const { data } = await supabase.from("brands").select("id, name");
+    if (data) setBrands(data);
   };
 
   const loadCategories = async () => {
-    const { data, error } = await supabase
-      .from("categories")    // 🔴 TABLE: categories
-      .select("id, name");
-
-    if (!error) setCategories(data);
+    const { data } = await supabase.from("categories").select("id, name");
+    if (data) setCategories(data);
   };
 
   const loadGrades = async () => {
-    const { data, error } = await supabase
-      .from("grades")
-      .select("id, name");
-
-    if (!error) setGrades(data);
+    const { data } = await supabase.from("grades").select("id, name");
+    if (data) setGrades(data);
   };
 
-  // -----------------------------------------
-  // HANDLE CHANGE (UNTUK SINGLE FIELD)
-  // -----------------------------------------
   const handleChange = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const toggleCategory = (id) => {
     setForm((prev) => ({
       ...prev,
-      [name]: value,
+      category_ids: prev.category_ids.includes(id)
+        ? prev.category_ids.filter((c) => c !== id)
+        : [...prev.category_ids, id],
     }));
   };
 
-  // -----------------------------------------
-  // HANDLE CHANGE UNTUK MULTI CATEGORY
-  // -----------------------------------------
-  const toggleCategory = (id) => {
-    setForm((prev) => {
-      const exists = prev.category_ids.includes(id);
+  const uploadImage = async (file) => {
+    if (!file) throw new Error("File tidak ditemukan.");
 
-      return {
-        ...prev,
-        category_ids: exists
-          ? prev.category_ids.filter((c) => c !== id)
-          : [...prev.category_ids, id],
-      };
-    });
+    const cleanName = file.name.replace(/\s+/g, "-").toLowerCase();
+    const filePath = `products/${Date.now()}-${cleanName}`;
+
+    const { error } = await supabase.storage
+      .from("product_image")
+      .upload(filePath, file);
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from("product_image")
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
   };
 
-  // -----------------------------------------
-  // UPLOAD KE STORAGE
-  // -----------------------------------------
-  const uploadImage = async (file) => {
-  if (!file) throw new Error("File tidak ditemukan.");
-
-  // rapikan nama file
-  const cleanName = file.name.replace(/\s+/g, "-").toLowerCase();
-
-  // wajib masuk folder products/
-  const filePath = `products/${Date.now()}-${cleanName}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("product_image")      // bucket benar
-    .upload(filePath, file, {
-      upsert: false,
-      cacheControl: "3600",
-    });
-
-  if (uploadError) {
-    console.log("SUPABASE STORAGE ERROR:", uploadError);
-    throw uploadError;
-  }
-
-  const { data } = supabase.storage
-    .from("product_image")
-    .getPublicUrl(filePath);
-
-  return data.publicUrl;
-};
-
-  // -----------------------------------------
-  // SUBMIT → INSERT KE 6 TABEL
-  // -----------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -132,104 +85,86 @@ export default function AddProduct() {
       const img1 = form.gambar1 ? await uploadImage(form.gambar1) : null;
       const img2 = form.gambar2 ? await uploadImage(form.gambar2) : null;
 
-      await insertProduct(
-        form,
-        img1 ,
-        img2,
-        form.brand_id,        // 🔴 brands.id
-        form.category_ids     // 🔴 array categories.id
-      );
-
+      await insertProduct(form, img1, img2, form.brand_id, form.category_ids);
       navigate("/admin/products");
-
     } catch (err) {
       console.log("Gagal menambah produk:", err.message);
     }
   };
 
   return (
-    <div className="p-6">
+    <div className="p-10 w-full">
 
-      <div className="mb-6 flex items-center gap-3">
-    <button
-      className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
-      onClick={() => navigate(-1)}>
-      <ArrowLeft size={20} className="text-black" />
-    </button>
-    <h1 className="text-2xl font-bold">Tambah Produk</h1>
-  </div>
+      {/* HEADER */}
+      <div className="mb-8 flex items-center gap-3">
+        <button
+          className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft size={20} className="text-black" />
+        </button>
 
+        <h1 className="text-3xl font-bold">Tambah Produk</h1>
+      </div>
 
+      {/* CARD FULL WIDTH */}
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-xl p-8 max-w-3xl space-y-6"
+        className="bg-white border border-gray-200 shadow p-10 rounded-xl w-full"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex flex-col gap-8">
 
-          {/* NAMA PRODUK */}
-          <FormInput 
-            label="Nama Produk"
-            name="nama"
+          {/* FULL WIDTH INPUTS */}
+          <FormInput label="Nama Produk" name="nama" form={form} handle={handleChange} />
+
+          <SelectBlock
+            label="Brand"
+            value={form.brand_id}
+            onChange={(e) => handleChange("brand_id", e.target.value)}
+            options={brands}
+          />
+
+          <SelectBlock
+            label="Grade Produk"
+            value={form.grades_id}
+            onChange={(e) => handleChange("grades_id", e.target.value)}
+            options={grades}
+          />
+
+          <FormInput label="Size" name="size" form={form} handle={handleChange} />
+
+          <FormInput
+            label="Stok"
+            name="stok"
+            type="number"
             form={form}
             handle={handleChange}
           />
 
-          {/* BRAND */}
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Brand
-            </label>
-            <select
-              value={form.brand_id}
-              onChange={(e) => handleChange("brand_id", e.target.value)}
-              className="w-full bg-[#FAF7F0] border border-gray-300 rounded-xl px-4 py-3"
-            >
-              <option value="">Pilih Brand</option>
-              {brands.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-          </div>
+          <FormInput label="Harga" name="harga" form={form} handle={handleChange} />
 
-          {/* GRADE */}
-          <div>
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Grade Produk
-            </label>
-            <select
-              value={form.grades_id}
-              onChange={(e) => handleChange("grades_id", e.target.value)}
-              className="w-full bg-[#FAF7F0] border border-gray-300 rounded-xl px-4 py-3"
-            >
-              <option value="">Pilih Grade</option>
-              {grades.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <FormInput label="Gambar 1" name="gambar1" file form={form} handle={handleChange} />
+
+          <FormInput label="Gambar 2" name="gambar2" file form={form} handle={handleChange} />
 
           {/* DESKRIPSI */}
-          <div className="md:col-span-2">
-            <label className="block mb-1 text-sm font-medium text-gray-600">
-              Deskripsi
-            </label>
+          <div>
+            <label className="text-gray-600 text-sm mb-1 block">Deskripsi</label>
             <textarea
-              className="w-full bg-[#FAF7F0] border border-gray-300 rounded-xl px-4 py-3"
-              rows={5}
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-4 text-gray-900"
+              rows={6}
               value={form.deskripsi}
               onChange={(e) => handleChange("deskripsi", e.target.value)}
             ></textarea>
           </div>
 
-          {/* MULTI CATEGORY CHECKBOX */}
-          <div className="md:col-span-2">
-            <label className="block mb-2 text-sm font-medium text-gray-600">
-              Kategori (Boleh lebih dari 1)
+          {/* CATEGORY MULTI SELECT */}
+          <div>
+            <label className="text-gray-600 text-sm mb-2 block">
+              Kategori (boleh lebih dari 1)
             </label>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {categories.map((c) => (
                 <label key={c.id} className="flex items-center gap-2">
                   <input
@@ -242,55 +177,12 @@ export default function AddProduct() {
               ))}
             </div>
           </div>
-
-          {/* SIZE */}
-          <FormInput 
-            label="Size"
-            name="size"
-            form={form}
-            handle={handleChange}
-          />
-
-          {/* STOK */}
-          <FormInput 
-            label="Stok"
-            name="stok"
-            type="number"
-            form={form}
-            handle={handleChange}
-          />
-
-          {/* HARGA */}
-          <FormInput 
-            label="Harga"
-            name="harga"
-            form={form}
-            handle={handleChange}
-          />
-
-          {/* GAMBAR 1 */}
-          <FormInput
-            label="Gambar 1"
-            name="gambar1"
-            file={true}
-            form={form}
-            handle={handleChange}
-          />
-
-          {/* GAMBAR 2 */}
-          <FormInput
-            label="Gambar 2"
-            name="gambar2"
-            file={true}
-            form={form}
-            handle={handleChange}
-          />
-
         </div>
 
+        {/* BUTTON */}
         <button
           type="submit"
-          className="bg-black text-white w-full py-3 rounded-xl font-semibold hover:bg-black/80 transition"
+          className="mt-10 bg-black text-white w-full py-3 rounded-xl font-semibold hover:bg-black/80 transition"
         >
           Simpan Produk
         </button>
@@ -299,40 +191,46 @@ export default function AddProduct() {
   );
 }
 
-//
-// UNIVERSAL INPUT COMPONENT
-//
-function FormInput({ 
-  label, 
-  name, 
-  type = "text", 
-  form, 
-  handle, 
-  file = false 
-}) {
+function FormInput({ label, name, type = "text", form, handle, file = false }) {
   return (
-    <div>
-      <label className="block mb-1 text-sm font-medium text-gray-600">
-        {label}
-      </label>
+    <div className="flex flex-col w-full">
+      <label className="text-gray-600 text-sm mb-1">{label}</label>
 
-      {/* INPUT FILE */}
       {file ? (
         <input
           type="file"
           accept="image/*"
           onChange={(e) => handle(name, e.target.files[0])}
-          className="w-full bg-[#FAF7F0] border border-gray-300 rounded-xl px-4 py-3"
+          className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
         />
       ) : (
         <input
-          name={name}
           type={type}
           value={form[name]}
           onChange={(e) => handle(name, e.target.value)}
-          className="w-full bg-[#FAF7F0] border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+          className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3 text-gray-900"
         />
       )}
+    </div>
+  );
+}
+
+function SelectBlock({ label, value, onChange, options }) {
+  return (
+    <div className="flex flex-col w-full">
+      <label className="text-gray-600 text-sm mb-1">{label}</label>
+      <select
+        value={value}
+        onChange={onChange}
+        className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3 text-gray-900"
+      >
+        <option value="">Pilih {label}</option>
+        {options.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.name}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

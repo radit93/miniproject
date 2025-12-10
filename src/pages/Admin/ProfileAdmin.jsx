@@ -62,8 +62,8 @@ export default function ProfileAdmin() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-bold mb-4">Profile Admin</h1>
+      <div className="p-10 w-full">
+        <h1 className="text-2xl font-bold mb-4">Profile Admin</h1>
         <p>Memuat...</p>
       </div>
     );
@@ -71,18 +71,15 @@ export default function ProfileAdmin() {
 
   if (!profile) {
     return (
-      <div className="p-6">
-        <h1 className="text-xl font-bold mb-4">Profile Admin</h1>
+      <div className="p-10 w-full">
+        <h1 className="text-2xl font-bold mb-4">Profile Admin</h1>
         <p>Data tidak ditemukan.</p>
       </div>
     );
   }
 
-  // ======================================================
-  // FIELD INPUT SESUAI SCREENSHOT (bg abu, rounded, clean)
-  // ======================================================
   const Field = ({ label, value, setter, editable }) => (
-    <div className="flex flex-col mb-4">
+    <div className="flex flex-col mb-6 w-full">
       <label className="text-gray-600 text-sm mb-1">{label}</label>
 
       {editable ? (
@@ -100,77 +97,77 @@ export default function ProfileAdmin() {
   );
 
   return (
-    <div className="p-6 max-w-xl">
+    <div className="p-10 w-full">
 
-      <h1 className="text-2xl font-bold mb-6">Profile Admin</h1>
+      <h1 className="text-3xl font-bold mb-8">Profile Admin</h1>
 
-      <div className="bg-white shadow p-8 rounded-xl">
+      {/* CARD FULL WIDTH */}
+      <div className="bg-white shadow p-10 rounded-xl w-full border border-gray-200">
 
-        {/* USERNAME */}
-        <Field
-          label="Username"
-          value={username}
-          setter={setUsername}
-          editable={editMode}
-        />
+      {/* Ubah dari grid jadi flex-column full */}
+      <div className="flex flex-col gap-8">
 
-        {/* EMAIL (tidak bisa edit) */}
-        <div className="flex flex-col mb-4">
-          <label className="text-gray-600 text-sm mb-1">Email</label>
-          <div className="w-full bg-gray-200 p-3 rounded-lg text-gray-900">
-            {profile.email}
-          </div>
+      <Field
+        label="Username"
+        value={username}
+        setter={setUsername}
+        editable={editMode}
+      />
+
+      <div className="flex flex-col w-full">
+        <label className="text-gray-600 text-sm mb-1">Email</label>
+        <div className="w-full bg-gray-200 p-3 rounded-lg text-gray-900">
+          {profile.email}
         </div>
-
-        {/* ALAMAT */}
-        <Field
-          label="Alamat"
-          value={alamat}
-          setter={setAlamat}
-          editable={editMode}
-        />
-
-        {/* NO HP */}
-        <Field
-          label="No HP"
-          value={noHp}
-          setter={setNoHp}
-          editable={editMode}
-        />
-
-        {/* PASSWORD */}
-        <Field
-          label="Password"
-          value={pass}
-          setter={setPass}
-          editable={editMode}
-        />
-
-        {/* ROLE */}
-        <div className="flex flex-col mb-6">
-          <label className="text-gray-600 text-sm mb-1">Role</label>
-          <div className="w-full bg-gray-200 p-3 rounded-lg text-gray-900">
-            {profile.role}
-          </div>
-        </div>
-
-        {/* BUTTON */}
-        {editMode ? (
-          <button
-            onClick={handleSave}
-            className="w-full bg-black text-white py-3 rounded-lg font-semibold"
-          >
-            Simpan
-          </button>
-        ) : (
-          <button
-            onClick={() => setEditMode(true)}
-            className="w-full bg-black text-white py-3 rounded-lg font-semibold"
-          >
-            Edit Profil
-          </button>
-        )}
       </div>
+
+      <Field
+        label="Alamat"
+        value={alamat}
+        setter={setAlamat}
+        editable={editMode}
+      />
+
+      <Field
+        label="No HP"
+        value={noHp}
+        setter={setNoHp}
+        editable={editMode}
+      />
+
+      <Field
+        label="Password"
+        value={pass}
+        setter={setPass}
+        editable={editMode}
+      />
+
+      <div className="flex flex-col w-full">
+        <label className="text-gray-600 text-sm mb-1">Role</label>
+        <div className="w-full bg-gray-200 p-3 rounded-lg text-gray-900">
+          {profile.role}
+        </div>
+      </div>
+
     </div>
+
+    {editMode ? (
+      <button
+        onClick={handleSave}
+        className="w-full bg-black text-white py-3 rounded-lg font-semibold mt-6"
+      >
+        Simpan
+      </button>
+    ) : (
+      <button
+        onClick={() => setEditMode(true)}
+        className="w-full bg-black text-white py-3 rounded-lg font-semibold mt-6"
+      >
+        Edit Profil
+      </button>
+    )}
+    </div>
+
+  </div>
   );
 }

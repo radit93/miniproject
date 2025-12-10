@@ -10,7 +10,7 @@ import {
 import { ArrowLeft } from "lucide-react";
 
 export default function EditVariant() {
-  const { id } = useParams(); // product_id
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
@@ -24,9 +24,6 @@ export default function EditVariant() {
     stock: ""
   });
 
-  // -------------------------------------------------------
-  // LOAD DATA VARIANTS + GRADES
-  // -------------------------------------------------------
   useEffect(() => {
     async function load() {
       const gradesData = await getAllGrades();
@@ -43,9 +40,6 @@ export default function EditVariant() {
     setForm((p) => ({ ...p, [name]: value }));
   };
 
-  // -------------------------------------------------------
-  // TAMBAH VARIAN BARU
-  // -------------------------------------------------------
   const handleAddVariant = async () => {
     if (!form.size || !form.grades_id || !form.price || !form.stock) {
       alert("Lengkapi semua field varian!");
@@ -54,7 +48,6 @@ export default function EditVariant() {
 
     try {
       await addVariant(id, form);
-
       const updated = await getVariants(id);
       setVariants(updated);
 
@@ -64,9 +57,6 @@ export default function EditVariant() {
     }
   };
 
-  // -------------------------------------------------------
-  // UPDATE FIELD VARIAN (ON BLUR)
-  // -------------------------------------------------------
   const handleUpdate = async (variantId, field, value) => {
     await updateVariantField(variantId, field, value);
 
@@ -74,160 +64,157 @@ export default function EditVariant() {
     setVariants(updated);
   };
 
-  // -------------------------------------------------------
-  // HAPUS VARIAN
-  // -------------------------------------------------------
   const handleDelete = async (variantId) => {
     if (!confirm("Hapus varian ini?")) return;
 
     await deleteVariant(variantId);
-
     const updated = await getVariants(id);
     setVariants(updated);
   };
 
   if (loading) return <p className="p-6">Loading...</p>;
 
-  // -------------------------------------------------------
-  // UI
-  // -------------------------------------------------------
   return (
-    <div className="p-6">
+    <div className="p-10 w-full">
 
-      <div className="flex items-center gap-3 mb-6">
-      <button
-        className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
-        onClick={() => navigate(-1)}>
-        <ArrowLeft size={20} className="text-black" />
-      </button>
-      <h1 className="text-2xl font-bold">Edit Varian Produk</h1>
-    </div>
+      {/* HEADER */}
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          className="p-2 bg-white rounded-full shadow-sm hover:scale-110 transition"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft size={20} className="text-black" />
+        </button>
 
-
-      {/* ---------------------- */}
-      {/* TABEL VARIAN           */}
-      {/* ---------------------- */}
-      <table className="w-full border mb-10">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 border">Size</th>
-            <th className="p-3 border">Grade</th>
-            <th className="p-3 border">Harga</th>
-            <th className="p-3 border">Stok</th>
-            <th className="p-3 border">Aksi</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {variants.map((v) => (
-            <tr key={v.id}>
-              <td className="border p-2">
-                <input
-                  type="text"
-                  defaultValue={v.size}
-                  onBlur={(e) =>
-                    handleUpdate(v.id, "size", Number(e.target.value))
-                  }
-                  className="w-full bg-[#FAF7F0] border rounded px-2 py-1"
-                />
-              </td>
-
-              <td className="border p-2">{v.grades?.name}</td>
-
-              <td className="border p-2">
-                <input
-                  type="number"
-                  defaultValue={v.price}
-                  onBlur={(e) =>
-                    handleUpdate(v.id, "price", Number(e.target.value))
-                  }
-                  className="w-full bg-[#FAF7F0] border rounded px-2 py-1"
-                />
-              </td>
-
-              <td className="border p-2">
-                <input
-                  type="number"
-                  defaultValue={v.stock}
-                  onBlur={(e) =>
-                    handleUpdate(v.id, "stock", Number(e.target.value))
-                  }
-                  className="w-full bg-[#FAF7F0] border rounded px-2 py-1"
-                />
-              </td>
-
-              <td className="border p-2 text-center">
-                <button
-                  onClick={() => handleDelete(v.id)}
-                  className="text-red-600 hover:underline"
-                >
-                  Hapus
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* ---------------------- */}
-      {/* FORM TAMBAH VARIAN     */}
-      {/* ---------------------- */}
-      <h2 className="text-xl font-semibold mb-3">Tambah Varian Baru</h2>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
-        <div>
-          <label>Size</label>
-          <input
-            type="text"
-            value={form.size}
-            onChange={(e) => handleChange("size", e.target.value)}
-            className="w-full bg-[#FAF7F0] border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label>Grade</label>
-          <select
-            value={form.grades_id}
-            onChange={(e) => handleChange("grades_id", e.target.value)}
-            className="w-full bg-[#FAF7F0] border rounded px-3 py-2"
-          >
-            <option value="">Pilih Grade</option>
-            {grades.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label>Harga</label>
-          <input
-            type="number"
-            value={form.price}
-            onChange={(e) => handleChange("price", e.target.value)}
-            className="w-full bg-[#FAF7F0] border rounded px-3 py-2"
-          />
-        </div>
-
-        <div>
-          <label>Stok</label>
-          <input
-            type="number"
-            value={form.stock}
-            onChange={(e) => handleChange("stock", e.target.value)}
-            className="w-full bg-[#FAF7F0] border rounded px-3 py-2"
-          />
-        </div>
+        <h1 className="text-3xl font-bold">Edit Varian Produk</h1>
       </div>
 
-      <button
-        onClick={handleAddVariant}
-        className="bg-black text-white px-6 py-3 rounded-xl hover:bg-black/80"
-      >
-        Tambah Varian
-      </button>
+      {/* TABEL VARIAN */}
+      <div className="bg-white border border-gray-200 shadow rounded-xl p-6 mb-12">
+        <table className="w-full border rounded-xl overflow-hidden">
+          <thead className="bg-gray-200">
+            <tr>
+              <th className="p-3 border">Size</th>
+              <th className="p-3 border">Grade</th>
+              <th className="p-3 border">Harga</th>
+              <th className="p-3 border">Stok</th>
+              <th className="p-3 border">Aksi</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {variants.map((v) => (
+              <tr key={v.id} className="even:bg-gray-50">
+                <td className="border p-2">
+                  <input
+                    type="text"
+                    defaultValue={v.size}
+                    onBlur={(e) =>
+                      handleUpdate(v.id, "size", Number(e.target.value))
+                    }
+                    className="w-full bg-gray-200 border border-gray-300 rounded-lg p-2"
+                  />
+                </td>
+
+                <td className="border p-2">{v.grades?.name}</td>
+
+                <td className="border p-2">
+                  <input
+                    type="number"
+                    defaultValue={v.price}
+                    onBlur={(e) =>
+                      handleUpdate(v.id, "price", Number(e.target.value))
+                    }
+                    className="w-full bg-gray-200 border border-gray-300 rounded-lg p-2"
+                  />
+                </td>
+
+                <td className="border p-2">
+                  <input
+                    type="number"
+                    defaultValue={v.stock}
+                    onBlur={(e) =>
+                      handleUpdate(v.id, "stock", Number(e.target.value))
+                    }
+                    className="w-full bg-gray-200 border border-gray-300 rounded-lg p-2"
+                  />
+                </td>
+
+                <td className="border p-2 text-center">
+                  <button
+                    onClick={() => handleDelete(v.id)}
+                    className="text-red-600 font-semibold hover:underline"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TAMBAH VARIAN BARU */}
+      <div className="bg-white border border-gray-200 shadow rounded-xl p-6">
+
+        <h2 className="text-xl font-semibold mb-6">Tambah Varian Baru</h2>
+
+        <div className="flex flex-col gap-6 mb-8">
+
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-600 mb-1">Size</label>
+            <input
+              type="text"
+              value={form.size}
+              onChange={(e) => handleChange("size", e.target.value)}
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-600 mb-1">Grade</label>
+            <select
+              value={form.grades_id}
+              onChange={(e) => handleChange("grades_id", e.target.value)}
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
+            >
+              <option value="">Pilih Grade</option>
+              {grades.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-600 mb-1">Harga</label>
+            <input
+              type="number"
+              value={form.price}
+              onChange={(e) => handleChange("price", e.target.value)}
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label className="text-sm text-gray-600 mb-1">Stok</label>
+            <input
+              type="number"
+              value={form.stock}
+              onChange={(e) => handleChange("stock", e.target.value)}
+              className="w-full bg-gray-200 border border-gray-300 rounded-lg p-3"
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleAddVariant}
+          className="bg-black text-white w-full py-3 rounded-xl font-semibold hover:bg-black/80 transition"
+        >
+          Tambah Varian
+        </button>
+      </div>
     </div>
   );
 }

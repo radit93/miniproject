@@ -50,9 +50,9 @@ export default function HeroPuma() {
         {/* Button */}
         <button
           ref={buttonRef}
+          onClick={() => navigate("/product/54")}     // ← arahkan ke produk Puma Speed Cat Red
           className="mt-6 px-6 py-1.5 border border-white text-white 
-          rounded-lg backdrop-blu r-sm
-          transition-colors duration-300 hover:bg-white hover:text-black"
+          rounded-lg transition-colors duration-300 hover:bg-white hover:text-black"
         >
           Shop Now
         </button>

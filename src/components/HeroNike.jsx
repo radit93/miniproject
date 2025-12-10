@@ -71,10 +71,11 @@ export default function HeroNike() {
         {/* BUTTON */}
         <button
           ref={buttonRef}
+          onClick={() => navigate("/category/shoes/basket")} // nav ke kategori shoes,sub kategori basket
           className="mt-6 px-6 py-2 border border-white text-white 
           rounded-md transition-colors duration-300 hover:bg-white hover:text-black"
         >
-          Shop Now
+         Own the Moment
         </button>
 
       </div>

@@ -1,49 +1,45 @@
-import { useState, useEffect, useRef } from "react";
+// src/components/HeroCarousel.jsx
+import { useState, useEffect, forwardRef } from "react";
 import { gsap } from "gsap";
 
-// Import slide hero kamu
 import HeroPuma from "./HeroPuma";
-// nanti bisa tambah slide lain:
 import HeroNike from "./HeroNike";
 
-export default function HeroCarousel() {
+const HeroCarousel = forwardRef(function HeroCarousel(_, ref) {
   const [index, setIndex] = useState(0);
+
   const slides = [
     <HeroPuma />,
     <HeroNike />,
   ];
 
-  const containerRef = useRef(null);
-
   // Animasi fade antar slide
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!ref?.current) return;
 
     gsap.fromTo(
-      containerRef.current,
+      ref.current,
       { opacity: 0 },
       { opacity: 1, duration: 1.2, ease: "power2.out" }
     );
-  }, [index]);
+  }, [index, ref]);
 
-  // Auto-slide (opsional, bisa kamu matikan)
+  // Auto-slide
   useEffect(() => {
     const interval = setInterval(() => {
       setIndex((prev) => (prev + 1) % slides.length);
-    }, 7000); // ganti slide tiap 7 detik
+    }, 7000);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <section className="relative w-full aspect-video overflow-hidden">
+    <section
+      ref={ref}
+      className="relative w-full aspect-video overflow-hidden"
+    >
+      {slides[index]}
 
-      {/* Tempat munculnya slide */}
-      <div ref={containerRef} className="w-full h-full">
-        {slides[index]}
-      </div>
-
-      {/* Pagination Dots */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-3 z-20">
         {slides.map((_, i) => (
           <div
@@ -56,4 +52,6 @@ export default function HeroCarousel() {
       </div>
     </section>
   );
-}
+});
+
+export default HeroCarousel;
