@@ -1,6 +1,6 @@
 // src/components/Layout/Header/Header.jsx
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/authContext";
 import SearchPopup from "../../Search/SearchPopup";
 import supabase from "../../../lib/supabaseClient";
@@ -23,7 +23,7 @@ export default function Header({ isOnHero }) {
   const [query, setQuery] = useState("");
 
   const [hidden, setHidden] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
+  const lastScrollY = useRef(0);
 
   const [searchResults, setSearchResults] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
@@ -131,22 +131,37 @@ export default function Header({ isOnHero }) {
   }, [searchQuery]);
 
   // SCROLL HIDE HEADER
+ // SCROLL HIDE HEADER ala Reebok
   useEffect(() => {
-    const onScroll = () => {
+    const handleScroll = () => {
       const current = window.scrollY;
+      const prev = lastScrollY.current;
 
-      if (current > lastScroll && current > 80) {
+      const isScrollingDown = current > prev;
+      const isScrollingUp = current < prev;
+
+      // Selalu tampil kalau dekat paling atas
+      if (current - prev > 8) {
+        // Scroll turunnya cukup besar
         setHidden(true);
-      } else {
+      }
+      else if (prev - current > 8) {
+        // Scroll naik cukup besar
+        setHidden(false);
+      } else if (isScrollingDown) {
+        // Scroll turun → sembunyi
+        setHidden(true);
+      } else if (isScrollingUp) {
+        // Scroll naik → muncul
         setHidden(false);
       }
 
-      setLastScroll(current);
+      lastScrollY.current = current;
     };
 
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [lastScroll]);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>

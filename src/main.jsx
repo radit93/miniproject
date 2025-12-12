@@ -6,13 +6,16 @@ import "./index.css";
 import { BrowserRouter } from "react-router-dom";
 import { SearchProvider } from "./context/SearchContext";
 import { AuthProvider } from "./context/authContext";
+import { HeroProvider } from "./context/HeroContext.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AuthProvider>
       <SearchProvider>
         <BrowserRouter>
+          <HeroProvider>
           <App />
+          </HeroProvider>
         </BrowserRouter>
       </SearchProvider>
     </AuthProvider>

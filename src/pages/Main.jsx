@@ -4,13 +4,14 @@ import ProductCarousel from "../components/Product/ProductCarousel";
 import SectionTitle from "../components/Product/SectionTitle";
 import Container from "../components/Layout/Container/Container";
 import HeroCarousel from "../components/HeroCarousel";
-import Header from "../components/Layout/Header/Header";
+// import Header from "../components/Layout/Header/Header";
+import { useHero } from "../context/HeroContext";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 function Main() {
   const heroRef = useRef(null);
-  const [isOnHero, setIsOnHero] = useState(true);
+  const { setIsOnHero } = useHero();
 
   useEffect(() => {
     if (!heroRef.current) return;
@@ -28,8 +29,6 @@ function Main() {
 
   return (
     <div className="bg-white min-h-screen w-full overflow-x-hidden flex flex-col">
-
-      <Header isOnHero={isOnHero} />
 
       <main className="flex-1 w-full text-gray-800">
 

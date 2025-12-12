@@ -20,6 +20,7 @@ import ProtectedRoute from "./route/ProtectedRoute";
 import PublicRoute from "./route/PublicRoute";
 import AdminRoute from "./route/AdminRoute";
 import { useAuth } from "./context/authContext";
+import { useHero } from "./context/HeroContext";
 
 import AdminLayout from "./pages/Admin/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
@@ -63,6 +64,8 @@ export default function App() {
     }
   }
 
+  const { isOnHero } = useHero();
+
   // HIDE HEADER & FOOTER
   const hideLayout =
     location.pathname.startsWith("/login") ||
@@ -77,10 +80,12 @@ export default function App() {
     location.pathname.startsWith("/admin") ||
     location.pathname.startsWith("/forgot-password") ||
     location.pathname.startsWith("/checkout");
+    const isHome = location.pathname === "/";
+
 
   return (
     <>
-      {!hideLayout && location.pathname !== "/" && <Header />}
+      {!hideLayout && <Header isOnHero={isHome && isOnHero} />}
 
       <Routes>
         {/* PUBLIC */}

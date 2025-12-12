@@ -12,6 +12,71 @@ export default function HeaderIcons({ setSidebar, isOnHero }) {
   const [wishlistCount, setWishlistCount] = useState(0);
   const [initial, setInitial] = useState("U");
 
+  // =======================
+  // FETCH CART
+  // =======================
+  const fetchCart = async () => {
+    if (!user) {
+      setCartCount(0);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("cart")
+      .select("quantity")
+      .eq("user_id", user.id);
+
+    if (data) {
+      const total = data.reduce(
+        (sum, item) => sum + Number(item.quantity),
+        0
+      );
+      setCartCount(total);
+    }
+  };
+
+  // =======================
+  // FETCH WISHLIST
+  // =======================
+  const fetchWishlist = async () => {
+    if (!user) {
+      setWishlistCount(0);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("wishlist")
+      .select("id")
+      .eq("user_id", user.id);
+
+    if (data) {
+      setWishlistCount(data.length);
+    }
+  };
+
+  // RUN ON USER CHANGE
+  useEffect(() => {
+    fetchCart();
+    fetchWishlist();
+  }, [user]);
+
+  // LISTEN TO CUSTOM EVENTS
+  useEffect(() => {
+    const update = () => {
+      fetchCart();
+      fetchWishlist();
+    };
+
+    window.addEventListener("cart-updated", update);
+    window.addEventListener("wishlist-updated", update);
+
+    return () => {
+      window.removeEventListener("cart-updated", update);
+      window.removeEventListener("wishlist-updated", update);
+    };
+  }, [user]);
+
+  // FETCH USER INITIAL
   useEffect(() => {
     if (!user) return;
 
