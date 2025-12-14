@@ -201,4 +201,49 @@ export async function searchProducts(query) {
   if (error) throw error;
   return mapProducts(data);
 }
+
+// =======================
+// SEARCH + FILTER (BARU)
+// - lock by keyword (q)
+// - filter via BE
+// - mapping konsisten
+// =======================
+export async function searchProductsFiltered(queryText, filters = {}) {
+  const hasGrades = Array.isArray(filters.grades) && filters.grades.length > 0;
+  const hasPrice = !!filters.price;
+
+  let query = supabase
+    .from("product")
+    .select(`
+      id,
+      name,
+      brand_id,
+      brands ( name ),
+      product_image ( order, image_url ),
+      stock_variants!inner ( price, stock, grades_id ),
+      product_categories (
+        categories ( slug )
+      )
+    `)
+    .ilike("name", `%${queryText}%`);
+
+  // grades filter
+  if (hasGrades) {
+    const gradeIds = await resolveGradeIds(filters.grades);
+    if (gradeIds.length === 0) return [];
+    query = query.in("stock_variants.grades_id", gradeIds);
+  }
+
+  // price filter
+  query = applyPriceFilter(query, filters.price);
+
+  // stock only
+  query = query.gt("stock_variants.stock", 0);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  return mapProducts(data || []);
+}
+
  

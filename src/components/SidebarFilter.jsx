@@ -1,5 +1,4 @@
-// src/components/Filter/SidebarFilter.jsx
-import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 const GRADE_OPTIONS = ["BNIB", "VNDS", "USED"];
 
@@ -12,22 +11,19 @@ const PRICE_OPTIONS = [
 export default function SidebarFilter() {
   const [params, setParams] = useSearchParams();
 
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleResetFilter = () => {
-    navigate(location.pathname); // buang semua ?query
-  };
-
   const gradesParam = params.get("grades");
   const priceParam = params.get("price");
 
   const selectedGrades = gradesParam ? gradesParam.split(",") : [];
   const selectedPrice = priceParam || null;
 
+  // =====================
+  // TOGGLE GRADES
+  // =====================
   function toggleGrade(grade) {
-    let newGrades;
+    const nextParams = new URLSearchParams(params);
 
+    let newGrades;
     if (selectedGrades.includes(grade)) {
       newGrades = selectedGrades.filter((g) => g !== grade);
     } else {
@@ -35,23 +31,40 @@ export default function SidebarFilter() {
     }
 
     if (newGrades.length > 0) {
-      params.set("grades", newGrades.join(","));
+      nextParams.set("grades", newGrades.join(","));
     } else {
-      params.delete("grades");
+      nextParams.delete("grades");
     }
 
-    setParams(params, { replace: true });
+    setParams(nextParams, { replace: true });
   }
 
+  // =====================
+  // SET PRICE
+  // =====================
   function setPrice(value) {
+    const nextParams = new URLSearchParams(params);
+
     if (value === selectedPrice) {
-      params.delete("price");
+      nextParams.delete("price");
     } else {
-      params.set("price", value);
+      nextParams.set("price", value);
     }
 
-    setParams(params, { replace: true });
+    setParams(nextParams, { replace: true });
   }
+
+  // =====================
+  // RESET FILTER (FINAL)
+  // =====================
+  const handleResetFilter = () => {
+    const nextParams = new URLSearchParams(params);
+
+    nextParams.delete("grades");
+    nextParams.delete("price");
+
+    setParams(nextParams, { replace: true });
+  };
 
   return (
     <aside className="w-64 shrink-0 pr-6">
@@ -95,7 +108,6 @@ export default function SidebarFilter() {
         >
           Reset Filter
         </button>
-
       </div>
     </aside>
   );

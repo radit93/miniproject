@@ -31,7 +31,7 @@ export default function Header({ isOnHero }) {
   const [showPopup, setShowPopup] = useState(false);
 
   // =====================
-  // HANDLE TYPING (LOGIC LAMA)
+  // HANDLE TYPING
   // =====================
   const handleTyping = (value) => {
     setQuery(value);
