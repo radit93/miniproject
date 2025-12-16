@@ -76,23 +76,29 @@ useEffect(() => {
 
   const fetchCart = async () => {
     const { data, error } = await supabase
-      .from("cart")
-      .select(`
+    .from("cart")
+    .select(`
+      id,
+      quantity,
+      product:product_id (
         id,
-        quantity,
-        product:product_id (
-          id,
-          name,
-          images:product_image ( image_url )
-        ),
-        variant:variant_id (
-          id,
-          size,
-          price,
-          stock
+        name,
+        product_image (
+          image_url
         )
-      `)
-      .eq("user_id", user.id);
+      ),
+      variant:variant_id (
+        id,
+        size,
+        stock,
+        price,
+        grades:grades_id (
+          id,
+          name
+        )
+      )
+    `)
+    .eq("user_id", user.id);
 
     if (!error) {
       setCartItems(data || []);
@@ -327,6 +333,9 @@ useEffect(() => {
               {/* INFO PRODUK */}
               <div>
                 <p className="font-semibold">{item.product.name}</p>
+                <p className="text-sm text-gray-600">
+                  Grade: {item.variant.grades?.name || "-"}
+                </p>
                 <p>Size: {item.variant.size}</p>
                 <p>
                   Harga per item: Rp{" "}

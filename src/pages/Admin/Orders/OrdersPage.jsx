@@ -85,9 +85,17 @@ export default function OrdersPage() {
                 <p><strong>Alamat:</strong> {o.alamat}</p>
                 <p><strong>No HP:</strong> {o.no_hp}</p>
                 <p>
-                  <strong>Tanggal:</strong>{" "}
+                  <strong>Tanggal Order:</strong>{" "}
                   {new Date(o.created_at).toLocaleDateString("id-ID")}
                 </p>
+                {o.shipped_at && (
+                <p>
+                  <strong>Tanggal Bukti Diterima:</strong>{" "}
+                  {new Date(o.shipped_at).toLocaleString("id-ID", {
+                    timeZone: "Asia/Jakarta",
+                  })}
+                </p>
+              )}
               </div>
 
               {/* ITEM LIST */}

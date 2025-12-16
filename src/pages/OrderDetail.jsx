@@ -61,12 +61,18 @@ useEffect(() => {
             order
           )
         ),
-        variant:variant_id ( size )
+        variant:variant_id (
+          size,
+          grades:grades_id (
+            name
+          )
+        )
       `)
       .eq("order_id", id);
 
     if (data) setItems(data);
   };
+
 
   useEffect(() => {
     if (!user) return;
@@ -123,12 +129,17 @@ useEffect(() => {
   // SIMPAN KE DATABASE
   await supabase
     .from("orders")
-    .update({ bukti_gambar: publicUrl })
-    .eq("id", order.id);
+    .update({
+      bukti_gambar: publicUrl,
+      shipped_at: new Date().toISOString()
+    })
+    .eq("id", order.id)
+    .is("shipped_at", null);
 
-  setOrder({ ...order, bukti_gambar: publicUrl });
+  await fetchOrder(); 
+
   setUploading(false);
-};
+  };
 
   return (
     <main className="p-6 max-w-2xl mx-auto">
@@ -194,6 +205,14 @@ useEffect(() => {
         <p className="mt-2 text-gray-600 text-sm">
           Tanggal Order: {new Date(order.created_at).toLocaleDateString("id-ID")}
         </p>
+        {order.shipped_at && (
+          <p className="mt-1 text-gray-600 text-sm">
+            Barang diterima:{" "}
+            {new Date(order.shipped_at).toLocaleString("id-ID", {
+              timeZone: "Asia/Jakarta"
+            })}
+          </p>
+        )}
       </div>
 
       {/* BARANG DIPESAN */}
@@ -220,8 +239,11 @@ useEffect(() => {
               {/* INFO PRODUK */}
               <div className="flex-1">
                 <p className="font-semibold">{item.product.name}</p>
+                <p className="text-sm text-gray-600">
+                  Grade: {item.variant?.grades?.name || "-"}
+                </p>
                 <p>Size: {item.variant?.size || "-"}</p>
-                <p>Qty: {item.qty}</p>
+                <p>Jumlah: {item.qty}</p>
               </div>
 
               {/* HARGA */}
@@ -250,13 +272,16 @@ useEffect(() => {
                 src={order.bukti_gambar}
                 className="w-48 mx-auto rounded-xl shadow mb-4"
               />
-              <p className="text-gray-600 text-sm">
-                Kamu sudah upload bukti, menunggu verifikasi admin.
+              <p className="text-red-600 text-sm">
+                Kamu sudah upload bukti, menunggu verifikasi admin. Verifikasi akan dikakukan selama jam operasional 08.00 - 20.00 WIB
               </p>
             </div>
           ) : (
             <>
               <input type="file" accept="image/*" onChange={handleUpload} />
+              <p className="mt-2 text-sm text-red-600 font-medium">
+                Note : Bukti ini akan ditinjau admin selama jam operasional 08.00 - 20.00 WIB
+              </p>
               {uploading && (
                 <p className="text-sm text-gray-600 mt-2">Mengupload...</p>
               )}

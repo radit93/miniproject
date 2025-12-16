@@ -64,13 +64,8 @@ export default function ProductsPage() {
           {/* ROW UTAMA */}
           <div className="grid grid-cols-12 items-center">
 
-            {/* NAMA + ADMIN */}
-            <div className="col-span-2 font-medium">
-              {p.name}
-              <div className="text-xs text-gray-500">
-                oleh {p.created_by?.usernames ?? "-"}
-              </div>
-            </div>
+            {/* NAMA */}
+            <div className="col-span-2 font-medium">{p.name}</div>
 
             {/* BRAND */}
             <div>{p.brands?.name ?? "-"}</div>
@@ -141,24 +136,28 @@ export default function ProductsPage() {
 
             {/* AKSI */}
             <div className="flex justify-center gap-3">
+              {/* EDIT PRODUCT */}
               <button onClick={() => navigate(`/admin/products/edit/${p.id}`)}>
                 <Bolt size={18} className="text-black" />
               </button>
 
+              {/* EDIT VARIANT */}
               <button
                 onClick={() => navigate(`/admin/products/${p.id}/variants`)}
               >
                 <Pencil size={18} className="text-blue-600" />
               </button>
 
+              {/* DELETE */}
               <button onClick={() => handleDelete(p.id)}>
                 <Trash2 size={18} className="text-red-600" />
               </button>
             </div>
+
           </div>
 
           {/* ================================
-               VARIANTS LIST
+               VARIANTS LIST LANGSUNG TAMPIL
           ================================= */}
           <div className="mt-3 ml-4 space-y-2">
             {p.stock_variants?.length > 0 ? (
@@ -180,9 +179,6 @@ export default function ProductsPage() {
                   </div>
                   <div>
                     <span className="font-semibold">Stok:</span> {v.stock}
-                    <span className="text-xs text-gray-500 ml-2">
-                      oleh {v.created_by?.usernames ?? "-"}
-                    </span>
                   </div>
                 </div>
               ))
