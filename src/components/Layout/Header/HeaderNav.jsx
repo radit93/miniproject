@@ -1,6 +1,6 @@
 import { ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { categories } from "./categoriesData";
+import { categories } from "./CategoriesData";
 import { useSearch } from "../../../context/SearchContext";
 
 export default function HeaderNav({ isOnHero }) {
